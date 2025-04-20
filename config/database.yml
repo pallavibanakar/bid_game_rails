@@ -27,16 +27,16 @@ test:
 production:
   primary:
     <<: *default
-    database: bid_game
+    url: <%= ENV.fetch("DATABASE_URL") %>
   cache:
     <<: *default
-    database: bid_game_cache
+    url: <%= ENV.fetch("DATABASE_URL") %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *default
-    database: bid_game_queue
+    url: <%= ENV.fetch("DATABASE_URL") %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *default
-    database: bid_game_cable
+    url: <%= ENV.fetch("DATABASE_URL") %>
     migrations_paths: db/cable_migrate

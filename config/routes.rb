@@ -13,8 +13,8 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   resources :users do
-    resources :bids, only: [:create, :show]
-    get :game_status, to: 'game_status#show'
+    resources :bids, only: [ :create, :show ]
+    get :game_status, to: "game_status#show"
   end
-  get :prices, to: 'prices#index'
+  get :prices, to: "prices#index"
 end

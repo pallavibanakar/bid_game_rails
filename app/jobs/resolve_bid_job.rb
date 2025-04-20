@@ -10,25 +10,29 @@ class ResolveBidJob < ApplicationJob
     btc_price = BtcPriceService.latest_price
     if btc_price.nil? || btc_price == bid.price
       Rails.logger.warn("BTC price not available — re-enqueuing guess resolution")
-      self.class.set(wait: 15.seconds).perform_later(bid_id)
+      self.class.set(wait: 10.seconds).perform_later(bid_id)
       return
     end
 
-    predict_result =  (btc_price - bid.price).negative? ?  -1 : 1
-    result = (predict_result == bid.prediction) ? 1 : -1
+    predict_result =  (btc_price - bid.price).positive? ?  "up" : "down"
+    bid_result = (predict_result == bid.prediction) ? 1 : -1
 
-    bid.update(
-      result: result,
-      resolved: true,
-      resolution_price: btc_price,
-      resolved_at: Time.current.utc
-    )
-    user.update(
-      score: user.score + result
-    )
+    ActiveRecord::Base.transaction do
+      bid.update!(
+        result: bid_result,
+        resolved: true,
+        resolution_price: btc_price,
+        resolved_at: Time.current.utc
+      )
+
+      user.update!(
+        score: user.score + bid_result
+      )
+    end
 
     Rails.logger.info "Resolved BTC guesses at #{Time.current}"
   rescue => e
     Rails.logger.error "ResolveBidJob failed: #{e.class} - #{e.message}"
+    raise e
   end
 end
