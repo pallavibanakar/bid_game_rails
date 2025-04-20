@@ -1,11 +1,11 @@
-require 'net/http'
-require 'uri'
-require 'json'
+require "net/http"
+require "uri"
+require "json"
 
 class BtcPriceService
   BASE_URL = "https://api.coinbase.com/v2/prices"
 
-  def self.latest_price(currency = 'USD')
+  def self.latest_price(currency = "USD")
     cache_key = "btc_price_#{currency.downcase}"
 
     cached_price = Rails.cache.read(cache_key)
@@ -15,7 +15,7 @@ class BtcPriceService
 
     response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
       req = Net::HTTP::Get.new(uri)
-      req['Accept'] = 'application/json'
+      req["Accept"] = "application/json"
       http.request(req)
     end
 

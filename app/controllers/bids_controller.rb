@@ -2,17 +2,16 @@ class BidsController < ApplicationController
   before_action :authenticate_user!
 
   def create
-    user = current_user || User.find_by(id: params[:id])
-    if user.can_guess?
-      bid = user.bids.create(create_params)
-      if bid
+    if current_user.can_guess?
+      bid = current_user.bids.create(create_params)
+      if bid.persisted?
         ResolveBidJob.set(wait: 60.seconds).perform_later(bid.id)
         render json: bid, status: :created
       else
-        render json: { error: "Something went wrong, Please try again" }, status: :unprocessable_entity
+        render json: { error: bid.errors.full_messages }, status: :unprocessable_entity
       end
     else
-      render json: {error: "Please wait for the last guess to be resolved"}, status: :unprocessable_entity
+      render json: { error: "Please wait for the last guess to be resolved" }, status: :unprocessable_entity
     end
   end
 

@@ -14,21 +14,22 @@ class ResolveBidJob < ApplicationJob
       return
     end
 
-    predict_result =  (btc_price - bid.price).negative? ?  -1 : 1
-    result = (predict_result == bid.prediction) ? 1 : -1
+    predict_result =  (btc_price - bid.price).positive? ?  "up" : "down"
+    bid_result = (predict_result == bid.prediction) ? 1 : -1
 
     bid.update(
-      result: result,
+      result: bid_result,
       resolved: true,
       resolution_price: btc_price,
       resolved_at: Time.current.utc
     )
     user.update(
-      score: user.score + result
+      score: user.score + bid_result
     )
 
     Rails.logger.info "Resolved BTC guesses at #{Time.current}"
   rescue => e
     Rails.logger.error "ResolveBidJob failed: #{e.class} - #{e.message}"
+    raise e
   end
 end

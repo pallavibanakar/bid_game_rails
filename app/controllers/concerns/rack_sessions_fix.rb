@@ -5,7 +5,7 @@ module RackSessionsFix
     before_action :set_fake_session
     private
     def set_fake_session
-      request.env['rack.session'] ||= FakeRackSession.new
+      request.env["rack.session"] ||= FakeRackSession.new
     end
   end
 
