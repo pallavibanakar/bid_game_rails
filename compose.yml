@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: postgres
+      POSTGRES_DB: bid_game
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3001 -b '0.0.0.0'"
+    volumes:
+      - .:/app
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgres://postgres:root@db:5432/bid_game"
+      DEVISE_JWT_SECRET_KEY: ${DEVISE_JWT_SECRET_KEY}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+
+  # redis:
+  #   image: redis:7
+  #   # restart: unless-stopped
+  #   volumes:
+  #     - redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+  # Optional sidekiq service if you're using it
+  # sidekiq:
+  #   build: .
+  #   # restart: unless-stopped
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   command: bundle exec sidekiq -C config/sidekiq.yml
+  #   environment:
+  #     - DATABASE_URL=postgres://postgres:${DB_PASSWORD}@db:5432/bid_game
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - RAILS_ENV=production
+  #   env_file:
+  #     - .env.production
+
+volumes:
+  postgres_data:
